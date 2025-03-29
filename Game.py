@@ -1,7 +1,7 @@
 import time
 import threading
 
-class TextBasedGame:
+class OppaiTypeGame:
   def __init__(self, duration=30):
     self.duration = duration
     self.running = False
@@ -20,7 +20,7 @@ class TextBasedGame:
     self.running = False
     print("\nGame Over!")
 
-  def prompt_user(self):
+  def run_prompts(self):
     while self.running and not self.succeeded():
       print(f"\rTime Remaining: {self.time_remaining}s | Success Count: {self.success_count}")
       prompt = "Type 'success' to score a point: "
@@ -28,10 +28,10 @@ class TextBasedGame:
       if response.strip().lower() == "success":
         self.success_count += 1
 
-  def start_game(self):
+  def run_game(self):
     self.running = True
     timer_thread = threading.Thread(target=self.run_timer, daemon=True)
-    prompt_thread = threading.Thread(target=self.prompt_user, daemon=True)
+    prompt_thread = threading.Thread(target=self.run_prompts, daemon=True)
 
     timer_thread.start()
     prompt_thread.start()

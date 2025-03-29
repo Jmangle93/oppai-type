@@ -1,4 +1,4 @@
-from GameLoop import TextBasedGame
+from Game import OppaiTypeGame
 
-game = TextBasedGame(duration=30)
+game = OppaiTypeGame(duration=30)
 game.start_game()
