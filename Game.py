@@ -49,6 +49,8 @@ class OppaiTypeGame:
       self.time_remaining = self.duration - elapsed
       time.sleep(1)
     self.loop_running = False
+    # Signal the prompt thread to stop by setting loop_running to False
+    self.loop_running = False
     print("\nTime's up!")
     self.check_score()
     self.check_play_again()
@@ -58,10 +60,10 @@ class OppaiTypeGame:
       print(f"\rTime Remaining: {self.time_remaining}s | Success Count: {self.success_count}")
       expected, prompt = self.get_prompt() 
       response = input(f'{prompt} = ')
-      while response.strip().lower() != expected:
+      while response.strip().lower() != expected and self.loop_running:
         print(f"Incorrect! Try again.")
         response = input(prompt)
-      if response.strip().lower() == expected:
+      if self.loop_running and response.strip().lower() == expected:
         self.success_count += 1
         print(f"Success! Current count: {self.success_count}")
 
@@ -76,5 +78,4 @@ class OppaiTypeGame:
       prompt_thread.start()
 
       timer_thread.join()
-      self.loop_running = False  # Ensure prompt thread stops
       prompt_thread.join()
