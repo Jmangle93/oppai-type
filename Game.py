@@ -1,7 +1,8 @@
-import pykakasi
+# import pykakasi
+import random
 import time
 import threading
-import random
+from hiragana_sets import vowels, k, s, t, n, h, m, y, r, w
 
 class OppaiTypeGame:
   def __init__(self, duration=40):
@@ -9,45 +10,13 @@ class OppaiTypeGame:
     self.running = False
     self.success_count = 0
     self.time_remaining = duration
-    self.kakasi = pykakasi.kakasi()
     self.setup_prompts()
 
   def succeeded(self):
     return self.success_count >= 10
   
   def setup_prompts(self):
-    self.prompts = [
-      ("あ", "a"),
-      ("い", "i"),
-      ("う", "u"),
-      ("え", "e"),
-      ("お", "o"),
-      ("か", "ka"),
-      ("き", "ki"),
-      ("く", "ku"),
-      ("け", "ke"),
-      ("こ", "ko"),
-      ("さ", "sa"),
-      ("し", "shi"),
-      ("す", "su"),
-      ("せ", "se"),
-      ("そ", "so"),
-      ("た", "ta"),
-      ("ち", "chi"),
-      ("つ", "tsu"),
-      ("て", "te"),
-      ("と", "to"),
-      ("な", "na"),
-      ("に", "ni"),
-      ("ぬ", "nu"),
-      ("ね", "ne"),
-      ("の", "no"),
-      ("は", "ha"),
-      ("ひ", "hi"),
-      ("ふ", "fu"),
-      ("へ", "he"),
-      ("ほ", "ho"),
-    ]
+    self.prompts = vowels + k + s
     random.shuffle(self.prompts)
 
   def get_prompt(self):
