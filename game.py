@@ -22,6 +22,7 @@ class OppaiType:
         self._user_input = ""
         self._round_running = False
         self._running = False
+        self._winning = False
         self.missed_characters = []
         self.time_event = pygame.event.Event(TIME_EVENT)
         self._display_surf = pygame.display.set_mode(self.size, pygame.HWSURFACE | pygame.DOUBLEBUF)
@@ -40,6 +41,8 @@ class OppaiType:
             self.height,
             theme=self.menu_theme,
         )
+        self.sugoi_oppai = pygame.image.load('images/sugoi_oppai.png').convert()
+        self.sugoi_oppai = pygame.transform.scale(self.sugoi_oppai, (self.weight // 2, self.height // 2))
         self.setup_menus()
 
     def setup_prompt_queue(self):
@@ -143,11 +146,13 @@ class OppaiType:
     def check_user_input(self):
         if self._user_input.lower().strip() == self._prompt_queue[0][0]:
             self._score += 1
+            self._winning = True
             self._prompt_queue.pop(0)
             if not self._prompt_queue:
                 self.setup_prompt_queue()
         else:
             print("Incorrect input!")
+            self._winning = False
             if not any(c == self._prompt_queue[0][1] for c, _ in self.missed_characters):
                 self.missed_characters.append((self._prompt_queue[0][1], 1))
             else:
@@ -229,6 +234,11 @@ class OppaiType:
                 self.font.render(f'Score: {self._score}', True, (100, 200, 200)),
                 dest=(50, 200),
             )
+            if self._winning:
+                self._display_surf.blit(
+                    self.sugoi_oppai,
+                    (self.weight - self.sugoi_oppai.get_width() * 1.1, self.height - self.sugoi_oppai.get_height() * 1.1),
+                )
         else:
             self._display_surf.blit(
                 self.font.render('Press space to start', True, (100, 200, 200)),
