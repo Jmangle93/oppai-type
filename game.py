@@ -1,11 +1,13 @@
+from collections import defaultdict
+from dataclasses import dataclass
 import random
+from typing import Dict
 import pygame
 import pygame_menu
 from pygame.locals import QUIT,KEYDOWN,K_ESCAPE,K_RETURN,K_BACKSPACE,K_SPACE,TEXTINPUT,USEREVENT
 import hiragana_sets
 import katakana_sets
-from dataclasses import dataclass, defaultdict
-from typing import Dict
+
 
 TIME_EVENT = USEREVENT + 1
 
@@ -54,11 +56,12 @@ class CharacterTracker:
 
     def get_stats(self, character: str) -> CharacterStats:
         return self.stats[character]
+
 class OppaiType:
     def __init__(self):
         pygame.init()
         self.size = self.weight, self.height = 800, 600
-        self._hiragana_sets = hiragana_sets.default
+        self._hiragana_sets = hiragana_sets.default.characters
         self._katakana_sets = katakana_sets.vowels + katakana_sets.k
         self._prompt_queue = self._hiragana_sets.copy()
         self._score = 0
@@ -106,21 +109,21 @@ class OppaiType:
         self._options_menu.add.dropselect_multiple(
             'Hiragana Sets',
             [
-                ('あ ...', hiragana_sets.vowels),
-                ('か ...', hiragana_sets.k),
-                ('が ...', hiragana_sets.g),
-                ('さ ...', hiragana_sets.s),
-                ('ざ ...', hiragana_sets.z),
-                ('た ...', hiragana_sets.t),
-                ('だ ...', hiragana_sets.d),
-                ('な ...', hiragana_sets.n),
-                ('は ...', hiragana_sets.h),
-                ('ば ...', hiragana_sets.b),
-                ('ぱ ...', hiragana_sets.p),
-                ('ま ...', hiragana_sets.m),
-                ('や ...', hiragana_sets.y),
-                ('ら ...', hiragana_sets.r),
-                ('わ ...', hiragana_sets.w),
+                ('あ ...', hiragana_sets.vowels.characters),
+                ('か ...', hiragana_sets.k.characters),
+                ('が ...', hiragana_sets.g.characters),
+                ('さ ...', hiragana_sets.s.characters),
+                ('ざ ...', hiragana_sets.z.characters),
+                ('た ...', hiragana_sets.t.characters),
+                ('だ ...', hiragana_sets.d.characters),
+                ('な ...', hiragana_sets.n.characters),
+                ('は ...', hiragana_sets.h.characters),
+                ('ば ...', hiragana_sets.b.characters),
+                ('ぱ ...', hiragana_sets.p.characters),
+                ('ま ...', hiragana_sets.m.characters),
+                ('や ...', hiragana_sets.y.characters),
+                ('ら ...', hiragana_sets.r.characters),
+                ('わ ...', hiragana_sets.w.characters),
             ],
             default=[0, 1, 3, 5],
             onreturn=lambda value: setattr(

@@ -23,4 +23,4 @@ jobs:
         pylint --extension-pkg-whitelist=pygame -E $(git ls-files '*.py') 
     - name: Analyze with Pylint, ignore exit code
       run: |
-        pylint --extension-pkg-whitelist=pygame $(git ls-files '*.py') || true
+        pylint --extension-pkg-whitelist=pygame,collections,typing,dataclasses $(git ls-files '*.py') || true
