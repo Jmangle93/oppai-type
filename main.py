@@ -1,4 +1,4 @@
-from Game import OppaiTypeGame
+from Game import OppaiType
 
-game = OppaiTypeGame(duration=30)
-game.run_game()
+game = OppaiType()
+game.main_menu()
