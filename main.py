@@ -1,4 +1,4 @@
-from Game import OppaiType
+from game import OppaiType
 
 game = OppaiType()
 game.main_menu()
