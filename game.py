@@ -4,9 +4,56 @@ import pygame_menu
 from pygame.locals import QUIT,KEYDOWN,K_ESCAPE,K_RETURN,K_BACKSPACE,K_SPACE,TEXTINPUT,USEREVENT
 import hiragana_sets
 import katakana_sets
+from dataclasses import dataclass, defaultdict
+from typing import Dict
 
 TIME_EVENT = USEREVENT + 1
 
+"""
+CharacterStats is a helper dataclass designed to track typing performance metrics for individual characters.
+It provides properties to calculate accuracy, average speed, and consistency based on the typing data.
+
+Attributes:
+    attempts (int): The total number of attempts made to type this character.
+    correct (int): The number of correct attempts for this character.
+    total_time (float): The total time (in seconds) spent typing this character.
+
+Properties:
+    accuracy (float): The percentage of correct attempts out of total attempts. Returns 0.0 if no attempts are made.
+    average_speed (float): The average time (in seconds) spent per correct attempt. Returns 0.0 if no correct attempts are made.
+    consistency (float): The ratio of correct attempts to total attempts. Returns 0.0 if no attempts are made.
+"""
+@dataclass
+class CharacterStats:
+    attempts: int = 0
+    correct: int = 0
+    total_time: float = 0.0  # Total time spent typing this character
+
+    @property
+    def accuracy(self) -> float:
+        return (self.correct / self.attempts) * 100 if self.attempts > 0 else 0.0
+
+    @property
+    def average_speed(self) -> float:
+        return self.total_time / self.correct if self.correct > 0 else 0.0
+
+    @property
+    def consistency(self) -> float:
+        return self.correct / self.attempts if self.attempts > 0 else 0.0
+
+class CharacterTracker:
+    def __init__(self):
+        self.stats: Dict[str, CharacterStats] = defaultdict(CharacterStats)
+
+    def record_attempt(self, character: str, correct: bool, time_taken: float):
+        stat = self.stats[character]
+        stat.attempts += 1
+        if correct:
+            stat.correct += 1
+            stat.total_time += time_taken
+
+    def get_stats(self, character: str) -> CharacterStats:
+        return self.stats[character]
 class OppaiType:
     def __init__(self):
         pygame.init()
