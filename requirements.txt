@@ -1,1 +1,12 @@
+astroid==3.3.9
+dill==0.3.9
+isort==6.0.1
+mccabe==0.7.0
+platformdirs==4.3.7
 pygame==2.6.1
+pygame-menu==4.5.2
+pylint==3.3.6
+pyperclip==1.9.0
+tomli==2.2.1
+tomlkit==0.13.2
+typing_extensions==4.13.0
