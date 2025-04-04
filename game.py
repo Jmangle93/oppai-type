@@ -1,7 +1,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
 import random
-from typing import Dict
+from typing import Dict, List, Tuple
 import pygame
 import pygame_menu
 from pygame.locals import QUIT,KEYDOWN,K_ESCAPE,K_RETURN,K_BACKSPACE,K_SPACE,TEXTINPUT,USEREVENT
@@ -30,6 +30,7 @@ class CharacterStats:
     attempts: int = 0
     correct: int = 0
     total_time: float = 0.0  # Total time spent typing this character
+    individual_times: List[float] = None
 
     @property
     def accuracy(self) -> float:
@@ -41,18 +42,34 @@ class CharacterStats:
 
     @property
     def consistency(self) -> float:
-        return self.correct / self.attempts if self.attempts > 0 else 0.0
+        if len(self.individual_times) < 2:
+            return 1.0  # Perfect consistency if few attempts
+        mean = sum(self.individual_times) / len(self.individual_times)
+        variance = sum((x - mean) ** 2 for x in self.individual_times) / len(self.individual_times)
+        return 1 / (variance + 1)  # Inverse of variance (higher is more consistent)
+    
+    def update(self, time_taken: float, was_correct: bool) -> None:
+        """
+        Update the character's stats based on a new attempt.
+
+        Args:
+            time_taken (float): The time taken for this attempt.
+            was_correct (bool): Whether the attempt was correct or not.
+        """
+        self.attempts += 1
+        if was_correct:
+            self.correct += 1
+            self.total_time += time_taken
+        self.individual_times.append(time_taken)
 
 class CharacterTracker:
-    def __init__(self):
+    def __init__(self, prompt_queue: List[Tuple[str, str]]):
         self.stats: Dict[str, CharacterStats] = defaultdict(CharacterStats)
+        for _, japanese in prompt_queue:
+            self.stats[japanese] = CharacterStats()
 
-    def record_attempt(self, character: str, correct: bool, time_taken: float):
-        stat = self.stats[character]
-        stat.attempts += 1
-        if correct:
-            stat.correct += 1
-            stat.total_time += time_taken
+    def update_stats(self, japanese: str, time_taken: float, was_correct: bool):
+        self.stats[japanese].update(time_taken, was_correct)
 
     def get_stats(self, character: str) -> CharacterStats:
         return self.stats[character]
