@@ -1,5 +1,5 @@
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import random
 from typing import Dict, List, Tuple
 import pygame
@@ -10,6 +10,7 @@ import katakana_sets
 
 
 TIME_EVENT = USEREVENT + 1
+FINE_TIME_EVENT = USEREVENT + 2
 
 """
 CharacterStats is a helper dataclass designed to track typing performance metrics for individual characters.
@@ -30,7 +31,7 @@ class CharacterStats:
     attempts: int = 0
     correct: int = 0
     total_time: float = 0.0  # Total time spent typing this character
-    individual_times: List[float] = None
+    individual_times: List[float] = field(default_factory=list)
 
     @property
     def accuracy(self) -> float:
@@ -63,10 +64,8 @@ class CharacterStats:
         self.individual_times.append(time_taken)
 
 class CharacterTracker:
-    def __init__(self, prompt_queue: List[Tuple[str, str]]):
+    def __init__(self):
         self.stats: Dict[str, CharacterStats] = defaultdict(CharacterStats)
-        for _, japanese in prompt_queue:
-            self.stats[japanese] = CharacterStats()
 
     def update_stats(self, japanese: str, time_taken: float, was_correct: bool):
         self.stats[japanese].update(time_taken, was_correct)
@@ -78,12 +77,20 @@ class OppaiType:
     def __init__(self):
         pygame.init()
         self.size = self.weight, self.height = 800, 600
+        self.scroll_offset = 0
+        self.scroll_speed = 10
+        self.panel_width = 400
+        self.panel_height = 400
+        self.panel_x = self.weight - self.panel_width
+        self.panel_y = 0
+        self._character_tracker = CharacterTracker()
         self._hiragana_sets = hiragana_sets.default.characters
         self._katakana_sets = katakana_sets.vowels + katakana_sets.k
         self._prompt_queue = self._hiragana_sets.copy()
         self._score = 0
         self._high_score = 0
-        self._timer = 0
+        self._attempt_timer = 0.0
+        self._timer = 0.0
         self._time_limit = 30
         self._time_remaining = self._time_limit
         self._user_input = ""
@@ -91,6 +98,7 @@ class OppaiType:
         self._running = False
         self._winning = False
         self.missed_characters = []
+        self.fine_time_event = pygame.event.Event(FINE_TIME_EVENT)
         self.time_event = pygame.event.Event(TIME_EVENT)
         self._display_surf = pygame.display.set_mode(self.size, pygame.HWSURFACE | pygame.DOUBLEBUF)
         self.menu_theme = pygame_menu.themes.THEME_DARK
@@ -177,7 +185,7 @@ class OppaiType:
         )
         self._options_menu.add.range_slider(
             'Time Limit',
-            default=45,
+            default=30,
             range_values=(10, 120),
             increment=1,
             onchange=lambda value: setattr(self, '_time_limit', value),
@@ -214,20 +222,24 @@ class OppaiType:
         if self._user_input.lower().strip() == self._prompt_queue[0][0]:
             self._score += 1
             self._winning = True
+            self._character_tracker.update_stats(
+                self._prompt_queue[0][1],
+                self._attempt_timer,
+                True,
+            )
             self._prompt_queue.pop(0)
             if not self._prompt_queue:
                 self.setup_prompt_queue()
         else:
             print("Incorrect input!")
             self._winning = False
-            if not any(c == self._prompt_queue[0][1] for c, _ in self.missed_characters):
-                self.missed_characters.append((self._prompt_queue[0][1], 1))
-            else:
-                for i, (c, n) in enumerate(self.missed_characters):
-                    if c == self._prompt_queue[0][1]:
-                        self.missed_characters[i] = (c, n + 1)
-                        break
+            self._character_tracker.update_stats(
+                self._prompt_queue[0][1],
+                self._attempt_timer,
+                False,
+            )
         self._user_input = ""
+        self._attempt_timer = 0.0
 
     def check_score(self):
         if self._score > self._high_score:
@@ -248,12 +260,28 @@ class OppaiType:
 
     def start_round(self):
         self._round_running = True
-        self._timer = 0
+        self._timer = 0.0
+        self._attempt_timer = 0.0
         self._user_input = ""
         self._score = 0
         self._time_remaining = self._time_limit
         self.setup_prompt_queue()
         pygame.time.set_timer(self.time_event, 1000)
+        pygame.time.set_timer(self.fine_time_event, 50)
+
+    def display_scrollable_stats(self):
+        pygame.draw.rect(
+            self._display_surf,
+            (100, 200, 200),
+            (self.panel_x, self.panel_y, self.panel_width, self.panel_height),
+        )
+        for i, (character, stats) in enumerate(self._character_tracker.stats.items()):
+            text = f"{character}: {stats.accuracy:.2f}% | {stats.average_speed:.2f}s | {stats.consistency:.2f}"
+            text_surface = self.font.render(text, True, (0, 0, 0))
+            text_y = self.panel_y + (i * self.font.get_height() + 10) - self.scroll_offset
+
+            if self.panel_y <= text_y < self.panel_y + self.panel_height + self.font.get_height():
+                self._display_surf.blit(text_surface, (self.panel_x + 10, text_y))
 
     def on_event(self, event):
         if event.type == QUIT:
@@ -264,7 +292,12 @@ class OppaiType:
         elif event.type == KEYDOWN:
             self.handle_keydown(event)
         elif event.type == TIME_EVENT:
-            self._timer += 1
+            self._timer += 1.0
+        elif event.type == FINE_TIME_EVENT:
+            self._attempt_timer += 0.05
+        elif event.type == pygame.MOUSEWHEEL:
+            self.scroll_offset -= event.y * self.scroll_speed
+            self.scroll_offset = max(0, min(self.scroll_offset, len(self._character_tracker.stats) * self.font.get_height() + 10 - self.panel_height))
 
     def on_update(self):
         self._time_remaining = self._time_limit - self._timer
@@ -311,12 +344,7 @@ class OppaiType:
                 self.font.render('Press space to start', True, (100, 200, 200)),
                 (50, 50),
             )
-        if self.missed_characters:
-            missed_text = ", ".join(f"{c}:{n}" for n, c in self.missed_characters)
-            self._display_surf.blit(
-                self.font.render(f'Missed: {missed_text}', True, (200, 100, 100)),
-                dest=(50, 250),
-            )
+            self.display_scrollable_stats()
         pygame.display.flip()
 
     def on_cleanup(self):
