@@ -1,71 +1,76 @@
-# Standard Python .gitignore
+# Standard JavaScript and Vue.js .gitignore
 
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# C extensions
-*.so
+# Logs
+logs/
+*.log
+*.log.*
 
-# Distribution / packaging
-.Python
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-*.egg-info/
+# Build output
 dist/
 build/
-*.egg
+*.cache/
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+# Dependency directories
+jspm_packages/
+.eslintcache
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
+# Testing
+coverage/
+.nyc_output/
 
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# pyenv
-.python-version
-
-# celery beat schedule file
-celerybeat-schedule
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
+# Environment variables
 .env
 .env.*
-.venv
-venv/
+.local
 
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
+# Editor directories and files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# Pyre
-.pyre/
+# System files
+.DS_Store
+Thumbs.db
 
-# Pytype
-.pytype/
+# Vue.js specific
+*.local
+*.output.js
+*.output.css
+*.output.map
+*.output.json
+.vuepress/dist/
+.vuepress/.temp/
+.vuepress/.cache/
+.vuepress/public/
+.vuepress/node_modules/
 
-# Cython debug symbols
-cython_debug/
+# Lint and formatting
+.eslintcache
+.stylelintcache
+.prettierignore
+.prettiercache
 
-# Oppai-specific directories
-oppai-env/
-pygame-env/
+# Optional npm cache directory
+.npm/
+
+# Optional eslint cache
+.eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# Optional lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
