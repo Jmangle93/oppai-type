@@ -1,11 +1,11 @@
 <template>
     <Game />
-  </template>
+</template>
   
-  <script>
-  import Game from './components/Game.vue';
-  
-  export default {
-    components: { Game }
-  };
-  </script>
+<script>
+import Game from './components/Game.vue';
+
+export default {
+components: { Game }
+};
+</script>

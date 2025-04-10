@@ -1,4 +1,4 @@
-  <script>
+<script>
 import { CharacterTracker, CharacterStats } from '../tracker.js';
 import { hiraganaRomajiPairs, katakanaRomajiPairs } from '../characterRomajiPairs.js';
 export default {
