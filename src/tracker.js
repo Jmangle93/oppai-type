@@ -7,8 +7,11 @@ class CharacterTracker {
     }
   
     updateStats(romaji, japanese, timeTaken, wasCorrect) {
-      const key = [romaji, japanese].join('|');
-      if (this.stats[key]) this.stats[key].update(timeTaken, wasCorrect);
+        const key = [romaji, japanese].join('|');
+        if (!this.stats[key]) {
+            this.stats[key] = new CharacterStats();
+        }
+        this.stats[key].update(timeTaken, wasCorrect);
     }
   
     getStats(romaji, japanese) {

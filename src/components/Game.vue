@@ -1,50 +1,89 @@
   <script>
-import { CharacterTracker, CharacterStats } from './tracker.js';
+import { CharacterTracker, CharacterStats } from '../tracker.js';
+import { hiraganaRomajiPairs, katakanaRomajiPairs } from '../characterRomajiPairs.js';
 export default {
 name: 'Game',
 data() {
     return {
-    tracker: new CharacterTracker([]),
-    currentPrompt: ['ka', 'か'],
-    lastTimestamp: performance.now(),
-    promptQueue: [['ka', 'か'], ['sa', 'さ']],
+    tracker: null,
+    currentPrompt: null,
+    promptStartTime: null,
+    elapsedTime: '0.000',
+    promptQueue: [],
     userInput: '',
+    selectedCharacterGroups: ['kata_vowels', 'hira_vowels', 'hira_k', 'hira_t', 'hira_s'],
     };
 },
+created() {
+    this.updatePromptQueue();
+},
 mounted() {
-    console.log('Tracker initialized:', this.tracker);
+    this.initCanvas();
     this.drawPrompt();
     document.addEventListener('keyup', this.handleKeyPress);
+    this.startTimer();
 },
 beforeDestroy() {
     document.removeEventListener('keyup', this.handleKeyPress); // Clean up
 },
 methods: {
+    initCanvas() {
+        const dpr = window.devicePixelRatio || 1;
+        this.$refs.canvas.width = window.innerWidth * 0.5 * dpr;
+        this.$refs.canvas.height = window.innerHeight * 0.4 * dpr;
+        this.$refs.canvas.style.width = `${window.innerWidth * 0.5}px`;
+        this.$refs.canvas.style.height = `${window.innerHeight * 0.4}px`;
+    },
+    updatePromptQueue() {
+      const selectedPairs = this.selectedCharacterGroups.reduce((acc, key) => {
+        if (katakanaRomajiPairs[key]) {
+          acc[key] = katakanaRomajiPairs[key];
+        }
+        if (hiraganaRomajiPairs[key]) {
+          acc[key] = hiraganaRomajiPairs[key];
+        }
+        return acc;
+      }, {});
+      this.promptQueue = Object.values(selectedPairs).flatMap(group => 
+        Object.entries(group).map(([romaji, japanese]) => [romaji, japanese])
+      );
+      this.tracker = new CharacterTracker(this.promptQueue);
+      this.currentPrompt = this.promptQueue[Math.floor(Math.random() * this.promptQueue.length)];
+    },
     drawPrompt() {
       const ctx = this.$refs.canvas.getContext('2d');
       ctx.clearRect(0, 0, this.$refs.canvas.width, this.$refs.canvas.height);
-      ctx.font = '48px Arial';
+      ctx.font = '64px Arial';
       ctx.fillStyle = 'black';
       ctx.fillText(this.currentPrompt[1], this.$refs.canvas.width / 2 - 20, this.$refs.canvas.height / 2);
-      ctx.font = '24px Arial';
-      ctx.fillText(`Type: ${this.currentPrompt[0]}`, this.$refs.canvas.width / 2 - 50, this.$refs.canvas.height / 2 + 50);
+      this.promptStartTime = performance.now();
+      this.updateTimer();
     },
-    handleKeyPress(event) {
-      if (event.key === 'Enter') {
-        this.submitGuess();
-      }
-    },
+
     submitGuess() {
-      const timeTaken = (performance.now() - this.lastTimestamp) / 1000;
+      const timeTaken = (performance.now() - this.promptStartTime) / 1000;
       const wasCorrect = this.userInput.toLowerCase() === this.currentPrompt[0].toLowerCase();
       this.tracker.updateStats(this.currentPrompt[0], this.currentPrompt[1], timeTaken, wasCorrect);
       this.userInput = ''; // Clear input
       if (wasCorrect) {
-        this.lastTimestamp = performance.now(); // Reset start time for next prompt
-        console.log(this.tracker.getStats());
+        this.promptStartTime = performance.now(); // Reset start time for next prompt
+        this.currentPrompt = this.promptQueue[Math.floor(Math.random() * this.promptQueue.length)];
+        this.drawPrompt();
       }
-      this.currentPrompt = this.promptQueue[Math.floor(Math.random() * this.promptQueue.length)];
-      this.drawPrompt();
+    },
+    startTimer() {
+      const update = () => {
+        if (this.promptStartTime !== null) {
+          const now = performance.now();
+          this.elapsedTime = ((now - this.promptStartTime) / 1000).toFixed(3); // Update time in seconds with 3 decimal places
+        }
+        this.animationFrameId = requestAnimationFrame(update); // Schedule next update
+      };
+      this.animationFrameId = requestAnimationFrame(update); // Start the loop
+    },
+    updateTimer() {
+      // Called when prompt changes to reset and update immediately
+      this.elapsedTime = '0.000'; // Reset display
     }
   }
 };
@@ -54,12 +93,13 @@ methods: {
     <div id="game-container">
       <div class="game-area">
         <canvas id="canvas" ref="canvas"></canvas>
+        <div class="timer">{{ elapsedTime }}s</div>
         <input v-model="userInput" @keyup.enter="submitGuess" placeholder="Type the romaji here..." class="user-input" />
       </div>
       <div id="stats-panel" ref="statsPanel" class="stats-panel">
         <h2>Statistics</h2>
         <div v-for="(stats, key) in tracker.stats" :key="key" class="stat-item">
-          {{ key.split('|')[0] }} ({{ key.split('|')[1] }}): Avg Speed: {{ stats.averageSpeed.toFixed(2) }}s, Accuracy: {{ stats.accuracy.toFixed(1) }}%, Consistency: {{ stats.consistency.toFixed(2) }}
+          {{ key.split('|')[1] }} : Avg Speed: {{ stats.averageSpeed.toFixed(2) }}s, Attempts: {{ stats.attempts }}, Correct: {{ stats.successes }}
         </div>
       </div>
     </div>

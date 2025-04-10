@@ -55,6 +55,9 @@ Thumbs.db
 .vuepress/public/
 .vuepress/node_modules/
 
+# Vite specific
+.vite/
+
 # Lint and formatting
 .eslintcache
 .stylelintcache
